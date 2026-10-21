@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>seed</title></head>
+<body style="background:#050908;color:#93f2c3;font-family:monospace;padding:20px">
+seeding mid-game state…
+<script>
+const save = {
+  v: 2,
+  biomass: 5.2e6,
+  runTotal: 9.1e6,
+  totalEver: 4.2e8,
+  clicks: 268,
+  drifts: 4,
+  fruits: 1,
+  bestBps: 41e3,
+  bestSpores: 24,
+  playTime: 1460,
+  colonies: [90, 60, 30, 10, 2, 0, 0, 0, 0, 0, 0, 0],
+  upgrades: {
+    firstfeed: 1, knot: 1, damp: 1, cycle: 1, count: 1,
+    't0-0': 1, 't0-1': 1, 't1-0': 1, 't2-0': 1,
+    rootnet: 1, greedy: 1
+  },
+  mutations: ['sweetrot', 'parasitism', 'molt'],
+  focusTier: null,
+  draftsTaken: 3,
+  pendingDrafts: 0,
+  draftThresholds: [1500, 40000, 800000, 15000000, 200000000, 3000000000, 50000000000],
+  spores: 18,
+  sporesEver: 24,
+  tree: { germination: 2, instinct: 1, recollection: 1 },
+  ach: { firstclick: 1, click100: 1, col10: 1, col50: 1, bio1e4: 1, bio1e8: 1, tier5: 1, up10: 1 },
+  autoBuy: false,
+  buyAmount: 1,
+  sound: true,
+  seenIntro: true,
+  started: true,
+  lastSave: Date.now(),
+  frenzyUntil: 0,
+  frenzyMul: 0,
+  autoGainAt: 0
+};
+const params = new URLSearchParams(location.search);
+const fruit = params.get('fruit');
+if (params.has('fresh')) {
+  localStorage.removeItem('sporefall.save.v1');
+  location.replace('/index.html?debug');
+} else {
+  if (params.has('legacy')) { save.v = 1; save.spores = 690000; save.sporesEver = 690000; save.bestSpores = 690000; }
+  if (params.has('draft')) { save.runTotal = 2000; save.draftsTaken = 0; save.mutations = ['sweetrot', 'parasitism']; }
+  if (params.has('all')) { save.colonies = [140, 110, 80, 60, 45, 30, 22, 14, 9, 5, 2, 1]; save.spores = 500; save.fruits = 4; save.draftsTaken = 7; save.runTotal = 4e12; save.biomass = 9e12; }
+  if (fruit) { save.biomass = Number(fruit); save.runTotal = Number(fruit); save.draftsTaken = save.draftThresholds.length; }
+  localStorage.setItem('sporefall.save.v1', JSON.stringify(save));
+  const tab = params.get('tab');
+  location.replace('/index.html?debug' + (tab ? '&tab=' + tab : '') + (fruit ? '&auto=fruit' : ''));
+}
+</script>
+</body></html>

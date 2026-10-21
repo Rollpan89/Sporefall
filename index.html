@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>SPOREFALL — the last spore</title>
+<meta name="description" content="A browser incremental about a fungus waking beneath a dead world." />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='34' fill='%238ef0c0'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23070b0a'/%3E%3C/svg%3E" />
+</head>
+<body>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"><span></span></div>
+    <div class="brand-text">
+      <h1>SPOREFALL</h1>
+      <p id="brandSub">a dead world, waking</p>
+    </div>
+  </div>
+
+  <div class="resources">
+    <div class="res res-main">
+      <span class="res-label">Biomass</span>
+      <strong id="biomass">0</strong>
+      <span class="res-sub"><span id="bps">0</span>/s</span>
+    </div>
+    <div class="res res-spore" id="sporeWrap">
+      <span class="res-label">Spores</span>
+      <strong id="spores">0</strong>
+      <span class="res-sub" id="sporeSub">permanent</span>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <div id="frenzyBadge" class="badge frenzy hidden"></div>
+    <button id="autoBadge" class="badge ghost hidden" title="Auto-buy is active">auto</button>
+    <button id="soundBtn" class="icon-btn" aria-label="Toggle sound and music" title="Toggle sound and music">♪</button>
+    <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu">⋯</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ── click stage ─────────────────────────────────────────────── -->
+  <section class="panel stage" id="stage" aria-label="Feed the network">
+    <div class="stage-top">
+      <div class="eyebrow">the buried heart</div>
+      <div class="stage-note" id="stageNote">tap the heart to feed</div>
+    </div>
+
+    <button class="orb-wrap" id="orb" aria-label="Feed the buried heart">
+      <span class="orb-ring ring-1"></span>
+      <span class="orb-ring ring-2"></span>
+      <span class="orb-ring ring-3"></span>
+      <span class="orb">
+        <svg class="garden" id="garden" viewBox="0 0 200 200" aria-hidden="true"></svg>
+        <span class="orb-core"></span>
+        <span class="orb-vein v1"></span>
+        <span class="orb-vein v2"></span>
+        <span class="orb-vein v3"></span>
+      </span>
+    </button>
+
+    <div class="whisper" id="whisper" aria-hidden="true"></div>
+
+    <div class="stage-bottom">
+      <div class="stat-chip"><span>click power</span><b id="clickPower">1</b></div>
+      <div class="stat-chip"><span>colonies</span><b id="colonyCount">0</b></div>
+      <div class="stat-chip"><span>drift</span><b id="driftCount">0</b></div>
+    </div>
+
+    <div class="drift-layer" id="driftLayer" aria-hidden="true"></div>
+    <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+  </section>
+
+  <!-- ── colonies ────────────────────────────────────────────────── -->
+  <section class="panel colonies" aria-label="Colonies">
+    <div class="panel-head">
+      <div>
+        <div class="eyebrow">the body</div>
+        <h2>Colonies</h2>
+      </div>
+      <div class="buy-modes" id="buyModes" role="group" aria-label="Buy amount">
+        <button data-amount="1" class="active">×1</button>
+        <button data-amount="10">×10</button>
+        <button data-amount="100">×100</button>
+        <button data-amount="max">MAX</button>
+      </div>
+    </div>
+    <div class="colony-list" id="colonyList"></div>
+    <div class="panel-foot" id="colonyFoot"></div>
+  </section>
+
+  <!-- ── side panel ──────────────────────────────────────────────── -->
+  <aside class="panel side" aria-label="Upgrades, mutations and spores">
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="tab active" data-tab="upgrades" role="tab">Upgrades</button>
+      <button class="tab" data-tab="mutations" role="tab">Strain<span class="dot hidden"></span></button>
+      <button class="tab" data-tab="spores" role="tab">Spores<span class="dot hidden"></span></button>
+      <button class="tab" data-tab="goals" role="tab">Record</button>
+    </div>
+
+    <div class="tab-body" id="tabBody">
+      <div class="tab-pane active" data-pane="upgrades">
+        <div class="pane-note" id="upgradeNote">growth leaves scars worth keeping</div>
+        <div class="upgrade-grid" id="upgradeList"></div>
+      </div>
+
+      <div class="tab-pane" data-pane="mutations">
+        <div class="pane-note">the strain remembers what the body forgets</div>
+        <div id="mutationList" class="mutation-list"></div>
+      </div>
+
+      <div class="tab-pane" data-pane="spores">
+        <div class="fruit-box" id="fruitBox"></div>
+        <div class="pane-note">spent on things the next body will know</div>
+        <div class="spore-grid" id="sporeList"></div>
+      </div>
+
+      <div class="tab-pane" data-pane="goals">
+        <div class="pane-note">what the world left behind</div>
+        <div id="goalList" class="goal-list"></div>
+        <div class="stats-block" id="statsBlock"></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="modal-root" id="modalRoot" aria-hidden="true"></div>
+
+<audio id="music" src="audio/sporefall.mp3" loop preload="auto"></audio>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
