@@ -6,38 +6,47 @@
 <title>SPOREFALL — the last spore</title>
 <meta name="description" content="A browser incremental about a fungus waking beneath a dead world." />
 <link rel="stylesheet" href="css/style.css" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='34' fill='%238ef0c0'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23070b0a'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="assets/icons/favicon.png" />
+<link rel="apple-touch-icon" href="assets/icons/favicon.png" />
 </head>
 <body>
 
+<div class="bg-mycelium" aria-hidden="true"></div>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div class="vignette" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-mark" aria-hidden="true"><span></span></div>
-    <div class="brand-text">
-      <h1>SPOREFALL</h1>
-      <p id="brandSub">a dead world, waking</p>
-    </div>
+    <h1 class="brand-wordmark"><img src="assets/icons/wordmark.webp" alt="SPOREFALL" /></h1>
+    <p id="brandSub">a dead world, waking</p>
   </div>
 
   <div class="resources">
     <div class="res res-main">
-      <span class="res-label">Biomass</span>
+      <span class="res-label"><i data-icon="res-biomass"></i>Biomass<em class="res-goal">550 Gt C</em></span>
       <strong id="biomass">0</strong>
       <span class="res-sub"><span id="bps">0</span>/s</span>
+      <span class="res-world" id="worldWrap" title="Living carbon in the fungus, against the planet's 550 Gt C">
+        <i class="res-world-bar"><b id="worldFill"></b></i>
+        <span class="res-world-pct" id="worldPct">0.0%</span>
+      </span>
     </div>
     <div class="res res-spore" id="sporeWrap">
-      <span class="res-label">Spores</span>
+      <span class="res-label"><i data-icon="res-spore"></i>Spores</span>
       <strong id="spores">0</strong>
       <span class="res-sub" id="sporeSub">permanent</span>
     </div>
   </div>
 
   <div class="top-actions">
+    <div class="timer-chip" id="gameTimer" title="Time grown since the first spore">◷ 0:00:00</div>
+    <button id="stageChip" class="stage-chip" type="button" title="Evolution — what the cluster has become">
+      <span class="stage-glyph" id="stageGlyph">✧</span>
+      <span class="stage-chip-name" id="stageChipName">Spore</span>
+      <span class="stage-pips" id="stagePips"></span>
+    </button>
     <div id="frenzyBadge" class="badge frenzy hidden"></div>
-    <button id="autoBadge" class="badge ghost hidden" title="Auto-buy is active">auto</button>
+    <button id="autoBadge" class="badge ghost hidden" title="Auto-buy starts after your first colony purchase">auto</button>
     <button id="soundBtn" class="icon-btn" aria-label="Toggle sound and music" title="Toggle sound and music">♪</button>
     <button id="menuBtn" class="icon-btn" aria-label="Menu" title="Menu">⋯</button>
   </div>
@@ -51,11 +60,21 @@
       <div class="stage-note" id="stageNote">tap the heart to feed</div>
     </div>
 
+    <div class="stage-track" id="stageTrack">
+      <div class="stage-track-head">
+        <span id="stageTrackName">Spore Stage</span>
+        <span id="stageTrackReq"></span>
+      </div>
+      <i class="stage-track-bar"><b id="stageFill"></b></i>
+    </div>
+
     <button class="orb-wrap" id="orb" aria-label="Feed the buried heart">
+      <svg class="biome" id="biome" viewBox="0 0 400 400" aria-hidden="true"></svg>
       <span class="orb-ring ring-1"></span>
       <span class="orb-ring ring-2"></span>
       <span class="orb-ring ring-3"></span>
       <span class="orb">
+        <img class="orb-heart" id="orbHeart" alt="" aria-hidden="true" />
         <svg class="garden" id="garden" viewBox="0 0 200 200" aria-hidden="true"></svg>
         <span class="orb-core"></span>
         <span class="orb-vein v1"></span>
@@ -66,10 +85,16 @@
 
     <div class="whisper" id="whisper" aria-hidden="true"></div>
 
+    <button class="evolve-btn hidden" id="evolveBtn" type="button">
+      <span class="evolve-kicker">the cluster is ready</span>
+      <strong class="evolve-name">Evolve</strong>
+      <span class="evolve-meta"></span>
+    </button>
+
     <div class="stage-bottom">
-      <div class="stat-chip"><span>click power</span><b id="clickPower">1</b></div>
-      <div class="stat-chip"><span>colonies</span><b id="colonyCount">0</b></div>
-      <div class="stat-chip"><span>drift</span><b id="driftCount">0</b></div>
+      <div class="stat-chip"><span><i data-icon="stat-click"></i>click power</span><b id="clickPower">1</b></div>
+      <div class="stat-chip"><span><i data-icon="stat-colonies"></i>colonies</span><b id="colonyCount">0</b></div>
+      <div class="stat-chip"><span><i data-icon="stat-drift"></i>drift</span><b id="driftCount">0</b></div>
     </div>
 
     <div class="drift-layer" id="driftLayer" aria-hidden="true"></div>
@@ -80,7 +105,7 @@
   <section class="panel colonies" aria-label="Colonies">
     <div class="panel-head">
       <div>
-        <div class="eyebrow">the body</div>
+        <div class="eyebrow" id="colonyEyebrow">the body</div>
         <h2>Colonies</h2>
       </div>
       <div class="buy-modes" id="buyModes" role="group" aria-label="Buy amount">
@@ -106,7 +131,7 @@
     <div class="tab-body" id="tabBody">
       <div class="tab-pane active" data-pane="upgrades">
         <div class="pane-note" id="upgradeNote">growth leaves scars worth keeping</div>
-        <div class="upgrade-grid" id="upgradeList"></div>
+        <div class="upgrade-list" id="upgradeList"></div>
       </div>
 
       <div class="tab-pane" data-pane="mutations">
@@ -129,6 +154,7 @@
   </aside>
 </main>
 
+<div class="record-pop" id="recordPop" aria-live="polite" aria-hidden="true"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
 

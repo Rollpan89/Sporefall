@@ -47,8 +47,29 @@ if (params.has('fresh')) {
 } else {
   if (params.has('legacy')) { save.v = 1; save.spores = 690000; save.sporesEver = 690000; save.bestSpores = 690000; }
   if (params.has('draft')) { save.runTotal = 2000; save.draftsTaken = 0; save.mutations = ['sweetrot', 'parasitism']; }
-  if (params.has('all')) { save.colonies = [140, 110, 80, 60, 45, 30, 22, 14, 9, 5, 2, 1]; save.spores = 500; save.fruits = 4; save.draftsTaken = 7; save.runTotal = 4e12; save.biomass = 9e12; }
+  if (params.has('all')) { save.colonies = [140, 110, 80, 60, 45, 30, 22, 14, 9, 5, 2, 1]; save.spores = 500; save.fruits = 4; save.draftsTaken = 7; save.runTotal = 4e11; save.biomass = 4e11; }
+  if (params.has('win')) { save.biomass = 1.2e30; save.runTotal = 1.2e30; save.totalEver = 1.2e30; }
   if (fruit) { save.biomass = Number(fruit); save.runTotal = Number(fruit); save.draftsTaken = save.draftThresholds.length; }
+  const STAGE_TOTAL = [0, 3e8, 2e11, 2e13, 2e15];
+  const STAGE_FRUITS = [0, 0, 1, 3, 5];
+  const setStage = raw => {
+    const idx = Math.max(0, Math.min(Number(raw) || 0, 4));
+    save.stage = idx;
+    save.stageTime = 9999;
+    save.promptedStage = idx;
+    save.totalEver = Math.max(save.totalEver, STAGE_TOTAL[idx]);
+    save.fruits = Math.max(save.fruits, STAGE_FRUITS[idx]);
+    save.draftsTaken = save.draftThresholds.length;
+    save.pendingDrafts = 0;
+  };
+  if (params.get('stage') != null) setStage(params.get('stage'));
+  if (params.has('ready')) {
+    const base = Math.max(0, Math.min(Number(params.get('ready')) || 0, 3));
+    setStage(base);
+    save.totalEver = Math.max(save.totalEver, STAGE_TOTAL[base + 1]);
+    save.fruits = Math.max(save.fruits, STAGE_FRUITS[base + 1]);
+  }
+
   localStorage.setItem('sporefall.save.v1', JSON.stringify(save));
   const tab = params.get('tab');
   location.replace('/index.html?debug' + (tab ? '&tab=' + tab : '') + (fruit ? '&auto=fruit' : ''));

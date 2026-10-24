@@ -1,5 +1,6 @@
 /* Headless pacing check for SPOREFALL.
    Mirrors the multiplier/cost math in js/game.js and simulates a greedy optimiser.
+   Models the spore stage: evolution bonuses and stage upgrades are excluded.
    Usage: node tools/sim.mjs [--clicks]
 */
 import fs from 'node:fs';
@@ -58,7 +59,15 @@ function simulate({ seconds = 7200, dt = 0.25, verbose = true } = {}) {
     for (let i = 0; i < TIERS.length; i++) raw += TIERS[i].prod * S.colonies[i] * tm[i];
     return raw * g;
   };
-  const clickGain = () => (1 + bps() * CLICK_RATIO_BASE) * clickMul();
+  const clickRatio = () => {
+    let r = CLICK_RATIO_BASE;
+    for (const id of S.upgrades) {
+      const u = UPGRADES.find(x => x.id === id);
+      if (u.eff.clickRatioAdd) r += u.eff.clickRatioAdd;
+    }
+    return r;
+  };
+  const clickGain = () => clickMul() + bps() * clickRatio();
   const costAt = (i, owned) => TIERS[i].cost * costMul() * Math.pow(COST_GROWTH, owned);
   const unlocked = i => {
     if (TIERS[i].unlock && !reqMet(TIERS[i].unlock)) return false;
@@ -85,7 +94,7 @@ function simulate({ seconds = 7200, dt = 0.25, verbose = true } = {}) {
   const buyAvailableUpgrades = () => {
     let bought = false;
     for (;;) {
-      const avail = UPGRADES.filter(u => !S.upgrades.has(u.id) && reqMet(u.req) && u.cost <= S.biomass)
+      const avail = UPGRADES.filter(u => !S.upgrades.has(u.id) && !u.stage && reqMet(u.req) && u.cost <= S.biomass)
         .sort((a, b) => a.cost - b.cost);
       if (!avail.length) break;
       const u = avail[0];

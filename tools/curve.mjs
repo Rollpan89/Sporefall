@@ -4,6 +4,8 @@
 
    usage: node tools/curve.mjs [--clicks] [--runs=40] [--costgrowth=1.19]
           [--spore=2:0.22]      base:exponent  (spore = base * (biomass/FRUIT_MIN)^exp)
+          [--stage=0..4]         apply that stage's standing bonus and upgrades
+                                 to every run (an upper bound, not a stage arc)
 */
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -11,7 +13,7 @@ import vm from 'node:vm';
 const src = fs.readFileSync(new URL('../js/data.js', import.meta.url), 'utf8');
 const ctx = { Math, Array, Object, Number, JSON, console };
 vm.createContext(ctx);
-vm.runInContext(src + '\n;globalThis.__D={TIERS,UPGRADES,MUTATIONS,SPORE_NODES,ACHIEVEMENTS,COST_GROWTH,TIER_DWELL,MILESTONE_EVERY,CLICK_RATIO_BASE,FRUIT_MIN,SPORE_BASE,SPORE_EXP,TIER_UP_AT,TIER_UP_COST_FACTOR,ACH_BONUS};', ctx);
+vm.runInContext(src + '\n;globalThis.__D={TIERS,UPGRADES,MUTATIONS,SPORE_NODES,STAGES,ACHIEVEMENTS,COST_GROWTH,TIER_DWELL,MILESTONE_EVERY,CLICK_RATIO_BASE,FRUIT_MIN,SPORE_BASE,SPORE_EXP,TIER_UP_AT,TIER_UP_COST_FACTOR,ACH_BONUS};', ctx);
 const D = ctx.__D;
 
 const arg = (name, def) => {
@@ -28,6 +30,8 @@ if (TIER_GAP !== 1) D.TIERS.forEach((t, i) => { t.cost *= Math.pow(TIER_GAP, i);
 const TREE_COST = Number(arg('treecost', 1));
 if (TREE_COST !== 1) D.SPORE_NODES.forEach(n => { n.cost *= TREE_COST; });
 const [SPORE_BASE, SPORE_EXP] = arg('spore', `${D.SPORE_BASE}:${D.SPORE_EXP}`).split(':').map(Number);
+const STAGE = Math.max(0, Math.min(Number(arg('stage', 0)), D.STAGES.length - 1));
+const STAGE_DEF = D.STAGES[STAGE];
 
 const TIERS = D.TIERS, UPGRADES = D.UPGRADES, NODES = D.SPORE_NODES, ACH = D.ACHIEVEMENTS;
 const FRUIT_MIN = D.FRUIT_MIN, MILESTONE = D.MILESTONE_EVERY;
@@ -62,6 +66,7 @@ function simulateRun(fruits) {
   };
   const achMul = () => 1 + D.ACH_BONUS * earned.size;
   S.colonies[0] = 5 * (tree.recollection || 0);
+  S.colonies[1] = 1 * (tree.momentum || 0);
 
   const unlocked = i => {
     if (TIERS[i].unlock && !reqMet(TIERS[i].unlock)) return false;
@@ -86,7 +91,7 @@ function simulateRun(fruits) {
   }
   const tierMults = () => TIERS.map((_, i) => Math.pow(2, Math.floor(S.colonies[i] / MILESTONE)));
   const globalMul = () => {
-    let g = achMul();
+    let g = achMul() * STAGE_DEF.mult;
     g *= treeProduction();
     for (const id of S.upgrades) {
       const u = UPG_BY_ID[id];
@@ -96,7 +101,7 @@ function simulateRun(fruits) {
     return g;
   };
   const clickMul = () => {
-    let c = 1 + treeEff('instinct', 'click');
+    let c = (1 + treeEff('instinct', 'click')) * STAGE_DEF.click;
     for (const id of S.upgrades) {
       const u = UPG_BY_ID[id];
       if (u.eff.clickMul) c *= u.eff.clickMul;
@@ -117,12 +122,20 @@ function simulateRun(fruits) {
     for (let i = 0; i < TIERS.length; i++) raw += TIERS[i].prod * S.colonies[i] * tm[i];
     return raw * g;
   };
-  const clickGain = () => (1 + bps() * D.CLICK_RATIO_BASE) * clickMul();
+  const clickRatio = () => {
+    let r = D.CLICK_RATIO_BASE;
+    for (const id of S.upgrades) {
+      const u = UPG_BY_ID[id];
+      if (u.eff.clickRatioAdd) r += u.eff.clickRatioAdd;
+    }
+    return r;
+  };
+  const clickGain = () => clickMul() + bps() * clickRatio();
   const costAt = (i, owned) => TIERS[i].cost * costMul() * Math.pow(COST_GROWTH, owned);
 
   const buyUpgrades = () => {
     for (;;) {
-      const avail = UPGRADES.filter(u => !S.upgrades.has(u.id) && reqMet(u.req) && u.cost <= S.biomass)
+      const avail = UPGRADES.filter(u => !S.upgrades.has(u.id) && (u.stage || 0) <= STAGE && reqMet(u.req) && u.cost <= S.biomass)
         .sort((a, b) => a.cost - b.cost);
       if (!avail.length) return;
       S.biomass -= avail[0].cost;
@@ -235,7 +248,7 @@ console.log('first run, no tree:');
 console.log('  ' + first.tiers.map((s, i) => `t${i + 1} ${s == null ? '—' : (s / 60).toFixed(0) + 'm'}`).join('   '));
 console.log('');
 
-console.log(`campaign: clicks=${CLICKS ? '1/s' : 'none'}  costGrowth=${COST_GROWTH}  dwell=${DWELL}  spore=${SPORE_BASE}*ratio^${SPORE_EXP}`);
+console.log(`campaign: clicks=${CLICKS ? '1/s' : 'none'}  stage=${STAGE_DEF.name} ×${STAGE_DEF.mult}  costGrowth=${COST_GROWTH}  dwell=${DWELL}  spore=${SPORE_BASE}*ratio^${SPORE_EXP}`);
 console.log('run  min   biomass      spores  held   lv    cols  bps          newest tier');
 let totalSeconds = 0, sporesEarned = 0, run = 0;
 const sporeBank = { spores: 0 };
