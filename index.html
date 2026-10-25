@@ -62,19 +62,35 @@
 
     <div class="stage-track" id="stageTrack">
       <div class="stage-track-head">
-        <span id="stageTrackName">Spore Stage</span>
+        <span id="stageTrackName">Spore</span>
         <span id="stageTrackReq"></span>
       </div>
       <i class="stage-track-bar"><b id="stageFill"></b></i>
     </div>
 
+    <button class="world-chip hidden" id="worldChip" type="button" title="The world condition for this body">
+      <span class="world-chip-glyph" id="worldChipGlyph">✧</span>
+      <span class="world-chip-name" id="worldChipName">Still Air</span>
+      <span class="world-chip-eff" id="worldChipEff"></span>
+    </button>
+
     <button class="orb-wrap" id="orb" aria-label="Feed the buried heart">
+      <div class="stage-backdrop__background">
+        <picture class="stage-art-picture">
+          <source id="stageBackdropSource" media="(max-width: 600px)" type="image/webp" />
+          <img class="stage-backdrop" id="stageBackdrop" alt="" aria-hidden="true" />
+        </picture>
+      </div>
+      <span class="scar-field" id="scarField" aria-hidden="true"></span>
       <svg class="biome" id="biome" viewBox="0 0 400 400" aria-hidden="true"></svg>
       <span class="orb-ring ring-1"></span>
       <span class="orb-ring ring-2"></span>
       <span class="orb-ring ring-3"></span>
       <span class="orb">
-        <img class="orb-heart" id="orbHeart" alt="" aria-hidden="true" />
+        <picture class="stage-art-picture">
+          <source id="orbHeartSource" media="(max-width: 600px)" type="image/webp" />
+          <img class="orb-heart" id="orbHeart" alt="" aria-hidden="true" />
+        </picture>
         <svg class="garden" id="garden" viewBox="0 0 200 200" aria-hidden="true"></svg>
         <span class="orb-core"></span>
         <span class="orb-vein v1"></span>
@@ -96,6 +112,12 @@
       <div class="stat-chip"><span><i data-icon="stat-colonies"></i>colonies</span><b id="colonyCount">0</b></div>
       <div class="stat-chip"><span><i data-icon="stat-drift"></i>drift</span><b id="driftCount">0</b></div>
     </div>
+
+    <button class="drift-dock hidden" id="driftDock" type="button" aria-label="Open the drift garden">
+      <span class="drift-dock-label">drift garden</span>
+      <span class="drift-dock-slots" id="driftDockSlots"></span>
+      <span class="drift-dock-cta" id="driftDockCta">plant / merge →</span>
+    </button>
 
     <div class="drift-layer" id="driftLayer" aria-hidden="true"></div>
     <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
@@ -135,6 +157,9 @@
       </div>
 
       <div class="tab-pane" data-pane="mutations">
+        <div class="drift-eco" id="driftEco"></div>
+        <div class="eco-panel" id="ecoPanel"></div>
+        <div class="graft-map hidden" id="graftMap"></div>
         <div class="pane-note">the strain remembers what the body forgets</div>
         <div id="mutationList" class="mutation-list"></div>
       </div>
@@ -147,6 +172,7 @@
 
       <div class="tab-pane" data-pane="goals">
         <div class="pane-note">what the world left behind</div>
+        <div class="world-memory" id="worldArchive"></div>
         <div id="goalList" class="goal-list"></div>
         <div class="stats-block" id="statsBlock"></div>
       </div>
@@ -155,6 +181,20 @@
 </main>
 
 <div class="record-pop" id="recordPop" aria-live="polite" aria-hidden="true"></div>
+
+<aside class="coach hidden" id="coach" role="status" aria-live="polite" aria-atomic="true" aria-labelledby="coachTitle">
+  <div class="coach-head">
+    <span class="coach-kicker">first steps</span>
+    <span class="coach-count" id="coachCount"></span>
+    <button class="coach-skip" id="coachSkip" type="button">skip tips</button>
+  </div>
+  <h3 id="coachTitle"></h3>
+  <p id="coachBody"></p>
+  <div class="coach-actions">
+    <button class="btn" id="coachNext" type="button">Show me</button>
+  </div>
+</aside>
+
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="modal-root" id="modalRoot" aria-hidden="true"></div>
 

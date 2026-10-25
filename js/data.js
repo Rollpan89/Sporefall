@@ -44,48 +44,56 @@ const TIERS = [
 // evolves fast, whether it took an hour or a week. `mult` / `click` are the
 // stage's bonus for the current body, and each stage opens its own upgrades
 // (see `stage` on UPGRADES). Fruiting returns the body to the spore stage.
+// The stages are shown as Spore → Grove → Territory → Biome → The Maw. Their
+// ids keep the original working names because they key the stage art, icon
+// cells and `data-stage` palettes.
 const STAGES = [
   {
-    id: 'spore', name: 'Spore Stage', short: 'Spore', glyph: '✧',
+    id: 'spore', name: 'Spore', short: 'Spore', glyph: '✧',
     eyebrow: 'the body', sub: 'a local cluster in the dark',
     brand: 'a dead world, waking',
     mult: 1, click: 1, req: null,
     heart: 'assets/icons/heart-0-spore.webp',
+    backdrop: 'assets/icons/backdrop-0-spore.webp',
     tagline: 'A local cluster of hyphae, expanding through soil and rot.',
   },
   {
-    id: 'forest', name: 'Forest Stage', short: 'Forest', glyph: '❦',
+    id: 'forest', name: 'Grove', short: 'Grove', glyph: '❦',
     eyebrow: 'the grove', sub: 'the cluster has become a wood',
     brand: 'the canopy answers',
     mult: 1.8, click: 1.25,
     heart: 'assets/icons/heart-1-forest.webp',
+    backdrop: 'assets/icons/backdrop-1-forest.webp',
     req: { total: 3e8 },
     tagline: 'The cluster pushes through soil, takes the trees, and grows inside the animals that shelter under them.',
   },
   {
-    id: 'country', name: 'Country Stage', short: 'Country', glyph: '⌗',
-    eyebrow: 'the country', sub: 'one body, many hands',
-    brand: 'the country is one body',
+    id: 'country', name: 'Territory', short: 'Territory', glyph: '⌗',
+    eyebrow: 'the territory', sub: 'one body, many hands',
+    brand: 'the territory is one body',
     mult: 3.5, click: 1.6,
     heart: 'assets/icons/heart-2-country.webp',
+    backdrop: 'assets/icons/backdrop-2-country.webp',
     req: { total: 2e11, fruits: 1 },
     tagline: 'Roads, fields, towns. The cluster learns to grow itself into people and call it a nation.',
   },
   {
-    id: 'continent', name: 'Continent Stage', short: 'Continent', glyph: '⏣',
-    eyebrow: 'the continent', sub: 'the land is one mouth',
+    id: 'continent', name: 'Biome', short: 'Biome', glyph: '⏣',
+    eyebrow: 'the biome', sub: 'the land is one mouth',
     brand: 'the land is one mouth',
     mult: 7, click: 2.2,
     heart: 'assets/icons/heart-3-continent.webp',
+    backdrop: 'assets/icons/backdrop-3-continent.webp',
     req: { total: 2e13, fruits: 3 },
     tagline: 'Coastlines dissolve. Every river runs into the same throat, and the throat is yours.',
   },
   {
-    id: 'world', name: 'World Stage', short: 'World', glyph: '◉',
-    eyebrow: 'the world', sub: 'the sole living thing',
-    brand: 'the world is one thing',
+    id: 'world', name: 'The Maw', short: 'The Maw', glyph: '◉',
+    eyebrow: 'the maw', sub: 'the sole living thing',
+    brand: 'the world is a mouth',
     mult: 14, click: 3,
-    // heart: 'assets/icons/heart-3-world.png',
+    heart: 'assets/icons/heart-4-world.webp',
+    backdrop: 'assets/icons/backdrop-4-world.webp',
     req: { total: 2e15, fruits: 5 },
     tagline: 'Nothing else is left alive to compete with. Only weather, and you.',
   },
@@ -143,7 +151,7 @@ const UPGRADES = [
   // Stage upgrades: hidden until the body has evolved far enough. Each stage
   // of the world opens two more ways to grow.
   { id: 'canopy', name: 'Canopy Reach', desc: 'All production ×2. The cluster finds the light.', cost: 2.5e9, stage: 1, eff: { globalMul: 2 } },
-  { id: 'rootstock', name: 'Rootstock', desc: 'Colonies cost 12% less. The forest holds its own weight.', cost: 9e9, stage: 1, eff: { costMul: 0.88 } },
+  { id: 'rootstock', name: 'Rootstock', desc: 'Colonies cost 12% less. The grove holds its own weight.', cost: 9e9, stage: 1, eff: { costMul: 0.88 } },
 
   { id: 'roadworks', name: 'Roadworks', desc: 'All production ×2.5. Every road is a hypha now.', cost: 1.6e12, stage: 2, eff: { globalMul: 2.5 } },
   { id: 'harvest', name: 'National Harvest', desc: '+0.25% production per colony owned.', cost: 4e12, stage: 2, eff: { perColony: 0.0025 } },
@@ -204,7 +212,7 @@ const MUTATIONS = [
   { id: 'clonal',     name: 'Clonal Riot',         rarity: 2, desc: 'All production ×1.9. Colonies cost 25% more.', eff: { globalMul: 1.9, costMul: 1.25 } },
   { id: 'parasitism', name: 'Parasitism',          rarity: 2, desc: '+4% production for every colony type you own. Base click power ×0.6.', eff: { perTier: 0.04, clickMul: 0.6 } },
   { id: 'mycorrhiza', name: 'Quiet Mycorrhiza',    rarity: 2, desc: '+0.3% production per colony owned. Offline growth falls to 20%.', eff: { perColony: 0.003, offlineAbs: 0.2 } },
-  { id: 'communion',  name: 'Spore Communion',     rarity: 2, desc: 'Drifting spores appear twice as often and reward double. All production ×0.94.', eff: { driftMul: 2, globalMul: 0.94 } },
+  { id: 'communion',  name: 'Spore Communion',     rarity: 2, desc: 'The communion shares its catch. Drift rewards double. All production ×0.94.', eff: { driftMul: 2, globalMul: 0.94 } },
   { id: 'molt',       name: 'Molt',                rarity: 2, desc: 'Every 90 seconds, instantly gain 30 seconds of production. All production ×0.9.', eff: { autoGain: { every: 90, seconds: 30 }, globalMul: 0.9 } },
   { id: 'sacrifice',  name: 'Blood Rot',           rarity: 2, desc: 'Lose 25% of your biomass now. All production ×1.8.', eff: { globalMul: 1.8, instantLoss: 0.25 } },
   { id: 'dormancy',   name: 'Dormancy',            rarity: 3, desc: 'Offline production rises to 100%. Online production ×0.8.', eff: { offlineAbs: 1, globalMul: 0.8 } },
@@ -215,23 +223,254 @@ const MUTATIONS = [
   { id: 'focus',      name: 'Singular Devotion',   rarity: 3, desc: 'One colony type becomes 6× as effective. Chosen at random.', eff: { tierFocus: true } },
 ];
 
+/* ── strain ecology ────────────────────────────────────────── */
+// A mutation belongs to the niche where it does its work. Colony tiers are
+// assigned to the same three niches, so a body can be read as a small ecology:
+// colonies give a niche its population, mutations give it a temperament, and a
+// graft placed in a site feeds that site's niche.
+const MUT_NICHE = {
+  sweetrot: 'root',  thickwalls: 'root', rotfed: 'root',
+  parasitism: 'root', mycorrhiza: 'root', filigree: 'root',
+  feral: 'heart',    predatory: 'heart', clonal: 'heart',
+  sacrifice: 'heart', glasshouse: 'heart', hunger: 'heart', focus: 'heart',
+  frantic: 'nerve',  communion: 'nerve', molt: 'nerve',
+  dormancy: 'nerve', ancestral: 'nerve',
+};
+for (const m of MUTATIONS) m.niche = MUT_NICHE[m.id];
+
+const ECO = {
+  niches: [
+    { id: 'root',  name: 'Root',  glyph: '⌾', note: 'rot, soil, patience' },
+    { id: 'heart', name: 'Heart', glyph: '❂', note: 'growth, hunger, bloom' },
+    { id: 'nerve', name: 'Nerve', glyph: '✳', note: 'signal, drift, memory' },
+  ],
+  // four colony tiers in each niche
+  tier: [
+    'root', 'heart', 'root', 'nerve', 'heart', 'root',
+    'root', 'heart', 'heart', 'nerve', 'nerve', 'nerve',
+  ],
+  maxKinds: 4,
+  diversity: 0.05,     // per extra colony type in a niche
+  strainStep: 0.04,    // per extra mutation in a niche
+  strainCap: 3,        // at most +12% from shared strains
+  graft: 0.10,         // a graft feeds its site's niche
+  graftStrain: 0.04,   // each aligned mutation feeds it further
+  graftStrainCap: 3,   // at most +12% from aligned mutations
+  web: 0.05,           // all three niches inhabited
+  // Named relationships only fire when both strains are held. Symbioses lift a
+  // niche; tensions pull it down. They are deliberately small next to the
+  // exponential colony curve, but they make a hand feel like a community.
+  links: [
+    { a: 'sweetrot', b: 'rotfed',      kind: 'symbiosis', niche: 'root',  mult: 1.10, name: 'Sugar Rot',      desc: 'The sugar feeds the rot, and the rot makes more sugar.' },
+    { a: 'feral',    b: 'hunger',      kind: 'symbiosis', niche: 'heart', mult: 1.10, name: 'Feeding Frenzy', desc: 'A hand and a mouth that agree on what to do next.' },
+    { a: 'communion', b: 'dormancy',    kind: 'symbiosis', niche: 'nerve', mult: 1.10, name: 'Long Dream',     desc: 'The drifting spores keep the sleeping body company.' },
+    { a: 'parasitism', b: 'mycorrhiza', kind: 'symbiosis', niche: 'root',  mult: 1.08, name: 'Shared Roots',   desc: 'Two ways of taking from the same network.' },
+    { a: 'glasshouse', b: 'communion',  kind: 'symbiosis', niche: 'heart', mult: 1.06, name: 'Glass Choir',    desc: 'Fragile bodies singing to the same drifting light.' },
+    { a: 'frantic',  b: 'dormancy',     kind: 'tension',   niche: 'nerve', mult: 0.92, name: 'Waking Fever',   desc: 'The body cannot race and sleep at once.' },
+    { a: 'clonal',   b: 'focus',        kind: 'tension',   niche: 'heart', mult: 0.92, name: 'Monoculture',    desc: 'A riot of copies with no single shape to devote itself to.' },
+    { a: 'sacrifice', b: 'thickwalls',  kind: 'tension',   niche: 'root',  mult: 0.94, name: 'Brittle Bargain', desc: 'Saved walls around a body that keeps spending itself.' },
+  ],
+};
+const ECO_NICHE_BY_ID = Object.fromEntries(ECO.niches.map((n) => [n.id, n]));
+
+/* ── world memory ───────────────────────────────────────────── */
+// Every fruiting writes the body into a permanent archive and leaves a scar on
+// the stage. The next body wakes under exactly one of these conditions, so a
+// rebirth is a different world, not only a reset. Each one trades something
+// away: none is a free buff.
+const WORLD_CONDITIONS = [
+  {
+    id: 'ashfall', name: 'Ashfall', glyph: '⌁', tone: 'ash',
+    desc: 'Ash settles over everything. Colonies cost 8% less; the hand is 20% weaker.',
+    eff: { costMul: 0.92, clickMul: 0.8 },
+  },
+  {
+    id: 'hush', name: 'The Hush', glyph: '○', tone: 'hush',
+    desc: 'The world holds its breath. Production ×1.2, but nothing grows while you are away.',
+    eff: { globalMul: 1.2, offlineAbs: 0 },
+  },
+  {
+    id: 'thaw', name: 'Thaw', glyph: '◌', tone: 'thaw',
+    desc: 'Old water returns. Offline growth +35%; production ×0.9.',
+    eff: { offlineAdd: 0.35, globalMul: 0.9 },
+  },
+  {
+    id: 'sporewind', name: 'Spore Wind', glyph: '≋', tone: 'wind',
+    desc: 'The wind carries richer spores. Drift rewards ×1.5; production ×0.93.',
+    eff: { driftMul: 1.5, globalMul: 0.93 },
+  },
+  {
+    id: 'richrot', name: 'Rich Rot', glyph: '❋', tone: 'rich',
+    desc: 'The soil is fat. Fruit pays 20% more spores; production ×0.92.',
+    eff: { sporeMul: 1.2, globalMul: 0.92 },
+  },
+  {
+    id: 'fever', name: 'Fever Dream', glyph: '✳', tone: 'fever',
+    desc: 'The body races. Production ×1.35; colonies cost 10% more.',
+    eff: { globalMul: 1.35, costMul: 1.1 },
+  },
+  {
+    id: 'still', name: 'Still Air', glyph: '◯', tone: 'still',
+    desc: 'A quiet world. Production ×1.08; drift rewards ×0.85.',
+    eff: { globalMul: 1.08, driftMul: 0.85 },
+  },
+];
+const WORLD_CONDITION_BY_ID = Object.fromEntries(
+  WORLD_CONDITIONS.map((c) => [c.id, c]),
+);
+const WORLD_SCAR_MAX = 12;
+const WORLD_ARCHIVE_MAX = 24;
+
+/* ── drift ecology ──────────────────────────────────────────── */
+// Catching a drifting spore fills a tray instead of paying out on the spot. A
+// caught spore can be planted (safe, but the ripe spore spoils if it is not
+// harvested) or merged. Two of a kind make a calm hybrid; teal + gold makes a
+// splice that can fail and blight the body for a moment.
+//
+// Balance: a catch should buy a meaningful slice of the next colony, not a
+// minute of idle production. At the ~60s spawn cadence a base spore pays 9-11
+// seconds of current production, and a managed merge line pays about 14.6 seconds
+// per catch. Growth stays under the cadence so a harvest resolves before the next
+// drift arrives; the ripe window is the real risk. Drift multipliers scale the
+// harvest only, never the cadence, so a drift build cannot double-dip.
+const DRIFT_TRAY_MAX = 4;
+const DRIFT_PLOTS = 3;
+const DRIFT_SPECIES = {
+  teal: {
+    id: 'teal', name: 'Quiet Spore', glyph: '✧', tone: 'teal',
+    art: 'assets/icons/spore_teal.webp',
+    desc: 'Calm and slow. A long, safe harvest window.',
+    grow: 30e3, ripe: 50e3, harvest: 9,
+  },
+  gold: {
+    id: 'gold', name: 'Greedy Spore', glyph: '✦', tone: 'gold',
+    art: 'assets/icons/spore_yellow.webp',
+    desc: 'Hungry and quick. Ripens fast, spoils fast.',
+    grow: 20e3, ripe: 15e3, harvest: 11,
+  },
+  chorus: {
+    id: 'chorus', name: 'Chorus Spore', glyph: '❁', tone: 'teal', hybrid: true,
+    art: 'assets/icons/spore_teal.webp',
+    desc: 'Two quiet spores singing. A long, generous harvest.',
+    grow: 40e3, ripe: 70e3, harvest: 24,
+  },
+  crown: {
+    id: 'crown', name: 'Crown Spore', glyph: '♛', tone: 'gold', hybrid: true,
+    art: 'assets/icons/spore_yellow.webp',
+    desc: 'Two hungry spores. Enormous, and gone in a breath.',
+    grow: 30e3, ripe: 12e3, harvest: 30,
+  },
+  splice: {
+    id: 'splice', name: 'Splice Spore', glyph: '⚯', tone: 'splice', hybrid: true,
+    art: 'assets/icons/spore_yellow.webp',
+    desc: 'A mixed strain. Unstable; sometimes it sings.',
+    grow: 25e3, ripe: 35e3, harvest: 36,
+    frenzyChance: 0.35, frenzyMul: 3, frenzySec: 12,
+  },
+};
+const DRIFT_MERGE = {
+  'teal+teal': { out: 'chorus', chance: 1 },
+  'gold+gold': { out: 'crown', chance: 1 },
+  'gold+teal': { out: 'splice', chance: 0.65 },
+};
+
+/* ── grafts (prototype) ────────────────────────────────────── */
+// A graft is a shape the body can take. The site decides what that shape does:
+// the Heart feeds production, the Nerve feeds clicks and drafts, the Root feeds
+// economy and offline patience. Every graft has one effect per site, so the
+// placement is the decision. Grafts are drafted, locked for the body, and lost
+// at fruiting like mutations.
+const GRAFT_SITES = [
+  { id: 'heart', name: 'Heart', glyph: '❂', note: 'what the body pumps' },
+  { id: 'nerve', name: 'Nerve', glyph: '✳', note: 'what the body decides' },
+  { id: 'root',  name: 'Root',  glyph: '⌾', note: 'what the body remembers' },
+];
+
+const GRAFTS = [
+  {
+    id: 'bell', name: 'Bell', glyph: '♧',
+    desc: 'A cap that opens with the pulse.',
+    hint: 'Strongest in the Heart.',
+    sites: {
+      heart: { globalMul: 1.35 },
+      nerve: { clickMul: 1.1 },
+      root:  { offlineAdd: 0.08 },
+    },
+  },
+  {
+    id: 'vein', name: 'Vein', glyph: '⌇',
+    desc: 'A thread of borrowed blood.',
+    hint: 'Strongest in the Nerve.',
+    sites: {
+      heart: { globalMul: 1.12 },
+      nerve: { clickMul: 1.4 },
+      root:  { costMul: 0.94 },
+    },
+  },
+  {
+    id: 'knot', name: 'Knot', glyph: '✾',
+    desc: 'A tangle that thinks.',
+    hint: 'Strongest in the Nerve.',
+    sites: {
+      heart: { globalMul: 1.1 },
+      nerve: { draftCards: 1 },
+      root:  { offlineAdd: 0.08 },
+    },
+  },
+  {
+    id: 'maw', name: 'Maw', glyph: '◒',
+    desc: 'A sac that eats the cost of growing.',
+    hint: 'Strongest in the Root.',
+    sites: {
+      heart: { globalMul: 1.15 },
+      nerve: { clickMul: 1.1 },
+      root:  { costMul: 0.85 },
+    },
+  },
+  {
+    id: 'rhizome', name: 'Rhizome', glyph: '⋔',
+    desc: 'A root that remembers the dark.',
+    hint: 'Strongest in the Root.',
+    sites: {
+      heart: { globalMul: 1.1 },
+      nerve: { clickMul: 1.08 },
+      root:  { offlineAdd: 0.2 },
+    },
+  },
+  {
+    id: 'sclerotium', name: 'Sclerotium', glyph: '◍',
+    desc: 'A hard body that survives the fall.',
+    hint: 'Strongest in the Root.',
+    sites: {
+      heart: { globalMul: 1.12 },
+      nerve: { clickMul: 1.1 },
+      root:  { sporeMul: 1.15 },
+    },
+  },
+];
+
+const GRAFT_BY_ID = Object.fromEntries(GRAFTS.map((g) => [g.id, g]));
+const GRAFT_SITE_BY_ID = Object.fromEntries(
+  GRAFT_SITES.map((s) => [s.id, s]),
+);
+
 const DRAFT_AT = [1500, 4e4, 8e5, 1.5e7, 2e8, 3e9, 5e10];
 
 /* ── permanent spore tree ───────────────────────────────────── */
 // Spore prices are deliberately steep at the first level of every node: a single
 // fruiting should buy one choice, not unlock the whole tree.
 const SPORE_NODES = [
-  { id: 'germination', name: 'Germination',  max: 10, cost: 10, grow: 1.55, desc: '+15% all production per level.', eff: { global: 0.15 } },
-  { id: 'instinct',    name: 'Instinct',     max: 10, cost: 3,  grow: 1.65, desc: '+25% base click power per level.', eff: { click: 0.25 } },
-  { id: 'recollection',name: 'Recollection', max: 6,  cost: 16, grow: 1.8,  desc: 'Each run begins with 5 Hyphal Threads per level.', eff: { start: 5 } },
-  { id: 'patience',    name: 'Patience',     max: 8,  cost: 11, grow: 1.6,  desc: '+8% offline production per level.', eff: { offline: 0.08 } },
-  { id: 'frugality',   name: 'Frugality',    max: 8,  cost: 11, grow: 1.65, desc: 'Colonies cost 3% less per level.', eff: { cost: 0.03 } },
-  { id: 'momentum',    name: 'Momentum',     max: 5,  cost: 18, grow: 1.8,  desc: 'Begin each new body with 1 Spore Pod per level.', eff: { start: 1 } },
-  { id: 'deeproots',   name: 'Deep Roots',   max: 5,  cost: 20, grow: 1.9,  desc: '+8% spores gained when fruiting, per level.', eff: { spore: 0.08 } },
-  { id: 'draft',       name: 'Many Shapes',  max: 2,  cost: 40, grow: 3.0,  desc: '+1 mutation draft per run.', eff: { drafts: 1 } },
-  { id: 'second',      name: 'Second Bloom', max: 1,  cost: 72, grow: 1,    desc: 'Begin each run with a free random mutation.', eff: { freeMut: 1 } },
-  { id: 'automation',  name: 'Automation',   max: 1,  cost: 100, grow: 1,   desc: 'Unlock auto-buy: once you have bought a colony, it spends up to 10% of your biomass about three times a second on the colony with the best production for its cost, pausing briefly after you tap. It starts on; click the auto badge to pause it.', eff: { auto: 1 } },
-  { id: 'overgrowth',  name: 'Overgrowth',   max: 1,  cost: 160, grow: 1,   desc: 'All production ×1.5, forever.', eff: { globalMul: 1.5 } },
+  { id: 'germination', name: 'Germination',  max: 10, cost: 15, grow: 1.55, desc: '+15% all production per level.', eff: { global: 0.15 } },
+  { id: 'instinct',    name: 'Instinct',     max: 10, cost: 5,  grow: 1.65, desc: '+25% base click power per level.', eff: { click: 0.25 } },
+  { id: 'recollection',name: 'Recollection', max: 6,  cost: 24, grow: 1.8,  desc: 'Each run begins with 5 Hyphal Threads per level.', eff: { start: 5 } },
+  { id: 'patience',    name: 'Patience',     max: 8,  cost: 17, grow: 1.6,  desc: '+8% offline production per level.', eff: { offline: 0.08 } },
+  { id: 'frugality',   name: 'Frugality',    max: 8,  cost: 17, grow: 1.65, desc: 'Colonies cost 3% less per level.', eff: { cost: 0.03 } },
+  { id: 'momentum',    name: 'Momentum',     max: 5,  cost: 27, grow: 1.8,  desc: 'Begin each new body with 1 Spore Pod per level.', eff: { start: 1 } },
+  { id: 'deeproots',   name: 'Deep Roots',   max: 5,  cost: 30, grow: 1.9,  desc: '+8% spores gained when fruiting, per level.', eff: { spore: 0.08 } },
+  { id: 'draft',       name: 'Many Shapes',  max: 2,  cost: 60, grow: 3.0,  desc: '+1 mutation draft per run.', eff: { drafts: 1 } },
+  { id: 'second',      name: 'Second Bloom', max: 1,  cost: 110, grow: 1,   desc: 'Begin each run with a free random mutation.', eff: { freeMut: 1 } },
+  { id: 'automation',  name: 'Automation',   max: 1,  cost: 600, grow: 1,   desc: 'Unlock auto-buy: once you have bought a colony, it spends up to 10% of your biomass about three times a second on the colony with the best production for its cost, pausing briefly after you tap. It starts on; click the auto badge to pause it.', eff: { auto: 1 } },
+  { id: 'overgrowth',  name: 'Overgrowth',   max: 1,  cost: 240, grow: 1,   desc: 'All production ×1.5, forever.', eff: { globalMul: 1.5 } },
 ];
 
 const NODE_BY_ID = {};
@@ -252,10 +491,10 @@ const ACHIEVEMENTS = [
   { id: 'col1000',    name: 'The Whole Ground', desc: 'Own 1,000 colonies.', req: { colonies: 1000 } },
 
   // ── the stages ──
-  { id: 'stage1',     name: 'Into the Wood',   desc: 'Reach the Forest Stage.', req: { stage: 1 } },
-  { id: 'stage2',     name: 'One Body, Many Hands', desc: 'Reach the Country Stage.', req: { stage: 2 } },
-  { id: 'stage3',     name: 'One Mouth',       desc: 'Reach the Continent Stage.', req: { stage: 3 } },
-  { id: 'stage4',     name: 'The Sole Living Thing', desc: 'Reach the World Stage.', req: { stage: 4 } },
+  { id: 'stage1',     name: 'Into the Wood',   desc: 'Reach the Grove.', req: { stage: 1 } },
+  { id: 'stage2',     name: 'One Body, Many Hands', desc: 'Reach the Territory.', req: { stage: 2 } },
+  { id: 'stage3',     name: 'One Mouth',       desc: 'Reach the Biome.', req: { stage: 3 } },
+  { id: 'stage4',     name: 'The Sole Living Thing', desc: 'Reach the Maw.', req: { stage: 4 } },
 
   // ── every colony type, in order ──
   { id: 'tier1',      name: 'Needlepoint',     desc: 'Grow a Spore Pod.', req: { owned: [1, 1] } },
