@@ -68,10 +68,10 @@ Stage accents — one per evolution, never mixed within an asset:
 | stage | accent | secondary |
 |---|---|---|
 | Spore | `#93f2c3` mint | `#55c997` |
-| Forest | `#b6efad` pale leaf | `#6cc87c` |
-| Country | `#f3d9a2` amber | `#d3a45f` |
-| Continent | `#a9e4ee` cold cyan | `#63b6cd` |
-| World | `#ddcbff` violet | `#a78ce6` |
+| Grove | `#b6efad` pale leaf | `#6cc87c` |
+| Territory | `#f3d9a2` amber | `#d3a45f` |
+| Biome | `#a9e4ee` cold cyan | `#63b6cd` |
+| The Maw | `#ddcbff` violet | `#a78ce6` |
 
 Rarity accents for mutation and record icons: common mint `#93f2c3`, uncommon pale
 blue `#8fcfe8`, rare gold `#eacb85`.

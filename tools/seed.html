@@ -4,9 +4,10 @@
 seeding mid-game state…
 <script>
 const save = {
-  v: 2,
+  v: 4,
   biomass: 5.2e6,
   runTotal: 9.1e6,
+  runTime: 1460,
   totalEver: 4.2e8,
   clicks: 268,
   drifts: 4,
@@ -21,6 +22,7 @@ const save = {
     rootnet: 1, greedy: 1
   },
   mutations: ['sweetrot', 'parasitism', 'molt'],
+  graftSites: { heart: null, nerve: null, root: null },
   focusTier: null,
   draftsTaken: 3,
   pendingDrafts: 0,
@@ -37,16 +39,33 @@ const save = {
   lastSave: Date.now(),
   frenzyUntil: 0,
   frenzyMul: 0,
-  autoGainAt: 0
+  autoGainAt: 0,
+  // deterministic world memory for screenshots
+  condition: 'still',
+  archive: [],
+  scars: [],
+  scarTotal: 0,
+  driftTray: [],
+  driftPlots: [null, null, null],
+  driftSeq: 0,
+  driftPlants: 0,
+  driftMerges: 0,
+  driftHarvests: 0,
+  blightUntil: 0
 };
 const params = new URLSearchParams(location.search);
 const fruit = params.get('fruit');
 if (params.has('fresh')) {
   localStorage.removeItem('sporefall.save.v1');
-  location.replace('/index.html?debug');
+  location.replace('/index.html?debug' + (params.has('grafts') ? '&grafts' : ''));
 } else {
   if (params.has('legacy')) { save.v = 1; save.spores = 690000; save.sporesEver = 690000; save.bestSpores = 690000; }
   if (params.has('draft')) { save.runTotal = 2000; save.draftsTaken = 0; save.mutations = ['sweetrot', 'parasitism']; }
+  if (params.has('grafts')) {
+    save.graftSites = params.has('draft')
+      ? { heart: null, nerve: null, root: null }
+      : { heart: 'bell', nerve: 'knot', root: null };
+  }
   if (params.has('all')) { save.colonies = [140, 110, 80, 60, 45, 30, 22, 14, 9, 5, 2, 1]; save.spores = 500; save.fruits = 4; save.draftsTaken = 7; save.runTotal = 4e11; save.biomass = 4e11; }
   if (params.has('win')) { save.biomass = 1.2e30; save.runTotal = 1.2e30; save.totalEver = 1.2e30; }
   if (fruit) { save.biomass = Number(fruit); save.runTotal = Number(fruit); save.draftsTaken = save.draftThresholds.length; }
@@ -72,7 +91,7 @@ if (params.has('fresh')) {
 
   localStorage.setItem('sporefall.save.v1', JSON.stringify(save));
   const tab = params.get('tab');
-  location.replace('/index.html?debug' + (tab ? '&tab=' + tab : '') + (fruit ? '&auto=fruit' : ''));
+  location.replace('/index.html?debug' + (tab ? '&tab=' + tab : '') + (fruit ? '&auto=fruit' : '') + (params.has('grafts') ? '&grafts' : ''));
 }
 </script>
 </body></html>
